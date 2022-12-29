@@ -132,13 +132,6 @@ export default class SQLite implements SchemaInspector {
   columnInfo(table: string, column: string): Promise<Column>;
   async columnInfo(table?: string, column?: string) {
     const getColumnsForTable = async (table: string): Promise<Column[]> => {
-      const tablesWithAutoIncrementPrimaryKeys = (
-        await this.knex
-          .select('name')
-          .from('sqlite_master')
-          .whereRaw(`sql LIKE "%AUTOINCREMENT%"`)
-      ).map(({ name }) => name);
-
       const columns: RawColumn[] = await this.knex.raw(
         `PRAGMA table_xinfo(??)`,
         table
@@ -184,8 +177,7 @@ export default class SQLite implements SchemaInspector {
           is_nullable: raw.notnull === 0,
           is_unique: !!index?.unique && indexInfo?.length === 1,
           is_primary_key: raw.pk === 1,
-          has_auto_increment:
-            raw.pk === 1 && tablesWithAutoIncrementPrimaryKeys.includes(table),
+          has_auto_increment: false,
           foreign_key_column: foreignKey?.to || null,
           foreign_key_table: foreignKey?.table || null,
         };
